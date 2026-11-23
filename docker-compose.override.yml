@@ -1,0 +1,64 @@
+services:
+  backend:
+    environment:
+      # Required
+      # prefix for routes
+      BASE_URL_PREFIX: ${BASE_URL_PREFIX:?err}
+      # URL to the Sundsvalls Kommun API
+      API_BASE_URL: ${API_BASE_URL:?err}
+      # Used for API auth
+      CLIENT_KEY: ${CLIENT_KEY:?err}
+      CLIENT_SECRET: ${CLIENT_SECRET:?err}
+      # SAML
+      SAML_CALLBACK_URL: ${SAML_CALLBACK_URL:?err}
+      SAML_LOGOUT_CALLBACK_URL: ${SAML_LOGOUT_CALLBACK_URL:?err}
+      SAML_FAILURE_REDIRECT: ${SAML_FAILURE_REDIRECT:?err}
+      SAML_SUCCESS_REDIRECT: ${SAML_SUCCESS_REDIRECT:?err}
+      SAML_LOGOUT_REDIRECT: ${SAML_LOGOUT_REDIRECT:?err}
+      # IDP entry and cert
+      SAML_ENTRY_SSO: ${SAML_ENTRY_SSO:?err}
+      SAML_IDP_PUBLIC_CERT: ${SAML_IDP_PUBLIC_CERT:?err}
+      # SP issuer and certs, issuer is usually the base URL
+      SAML_ISSUER: ${SAML_ISSUER:?err}
+      # Optional. Falls back to SAML_ISSUER.
+      SAML_AUDIENCE: ${SAML_AUDIENCE-}
+      SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY:?err}
+      SAML_PUBLIC_KEY: ${SAML_PUBLIC_KEY:?err}
+      # Used for session encrpytion
+      SECRET_KEY: ${SECRET_KEY:?err}
+      # Used for CORS - should contain the domain of frontend
+      ORIGIN: ${ORIGIN:?err}
+      # Optionals
+      NODE_ENV: ${NODE_ENV-production}
+      # Set to LOCAL only when serving over plain http; it turns off the Secure session cookie.
+      ENVIRONMENT: ${ENVIRONMENT-}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED-false}
+      LOG_FORMAT: ${LOG_FORMAT-dev}
+      LOG_DIR: ${LOG_DIR-../../data/logs}
+      CREDENTIALS: ${CREDENTIALS-true}
+      # Redis is required for multi-instance deployments. Leave REDIS_HOST empty
+      # only for single-instance local development.
+      REDIS_HOST: ${REDIS_HOST-}
+      # Must be unique per application/credential boundary when Redis is shared.
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX-}
+      # The application defaults to 6379 when REDIS_HOST is set.
+      REDIS_PORT: ${REDIS_PORT-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD-}
+  frontend:
+    environment:
+      # The image is built against the placeholders in frontend/.env-cicd; these
+      # replace them at container start. BASE_PATH and NEXT_PUBLIC_BASE_PATH are
+      # deliberately absent — Next resolves basePath while building, so changing
+      # it means rebuilding rather than setting it here.
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:?err}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?err}
+      NEXT_PUBLIC_PROTECTED_ROUTES: ${NEXT_PUBLIC_PROTECTED_ROUTES-}
+      DOMAIN_NAME: ${DOMAIN_NAME-}
+      ADMIN_URL: ${ADMIN_URL-}
+      # Server-only backend address. The default Compose network resolves the
+      # backend service name; do not use the browser-facing localhost URL here.
+      INTERNAL_API_URL: "http://backend:3000${BASE_URL_PREFIX:?err}"
+      HEALTH_AUTH: ${HEALTH_AUTH-false}
+      HEALTH_USERNAME: ${HEALTH_USERNAME-}
+      HEALTH_PASSWORD: ${HEALTH_PASSWORD-}
+      HEALTH_REQUEST_TIMEOUT_MS: ${HEALTH_REQUEST_TIMEOUT_MS-3000}

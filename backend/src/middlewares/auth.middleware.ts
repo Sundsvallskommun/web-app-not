@@ -1,0 +1,16 @@
+import { HttpException } from '@exceptions/HttpException';
+import { NextFunction, Request, Response } from 'express';
+
+const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    if (req.isAuthenticated()) {
+      next();
+    } else {
+      next(new HttpException(401, 'NOT_AUTHORIZED'));
+    }
+  } catch {
+    next(new HttpException(401, 'AUTH_FAILED'));
+  }
+};
+
+export default authMiddleware;

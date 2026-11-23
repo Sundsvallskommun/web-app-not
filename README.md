@@ -1,0 +1,157 @@
+# NOT
+
+## APIer som används
+
+Dessa APIer används i projektet, applikationsanvändaren i WSO2 måste prenumerera på dessa.
+Systemet utgår ifrån [api-config.ts](./backend/src/config/api-config.ts)/backend/api-config.ts där dessa står specificerade.
+
+## Utveckling
+
+### Krav
+
+- Node 24 (samma version som CI; se `.nvmrc`)
+- Yarn
+
+### Steg för steg
+
+1. Klona ner repot till en mapp "web-app-not"
+
+```
+git clone <repo-url> web-app-not
+cd web-app-not
+```
+
+2. Installera dependencies. Kör i roten (sätter upp git-hooks via husky) och i varje paket:
+
+```
+yarn install            # rot: husky, commitlint, lint-staged
+cd backend && yarn install && cd ..
+cd frontend && yarn install && cd ..
+```
+
+3. Skapa .env-fil för `frontend`
+
+```
+cd frontend
+cp .env-example .env
+```
+
+Redigera `.env` för behov, för utveckling bör exempelvärdet fungera.
+
+4. Skapa .env-fil för `backend`
+
+```
+cd backend
+cp .env.example.local .env.development.local
+cp .env.example.local .env.test.local
+```
+
+redigera `.env.development.local` för behov. URLer, nycklar och cert behöver fyllas i korrekt.
+
+- `CLIENT_KEY` och `CLIENT_SECRET` måste fyllas i för att APIerna ska fungera, du måste ha en applikation från WSO2-portalen som abonnerar på de microtjänster du anropar
+- `SAML_ENTRY_SSO` behöver pekas till en SAML IDP
+- `SAML_IDP_PUBLIC_CERT` ska stämma överens med IDPens cert
+- `SAML_PRIVATE_KEY` och `SAML_PUBLIC_KEY` behöver bara fyllas i korrekt om man kör mot en riktig IDP
+
+5. Synca datamodeller för api:er
+
+   Se till att README och /backend/src/config/api-config.ts matchar och justera utefter de api:er som önskas användas.
+   - För backend, i /backend kör `yarn generate:contracts` för att få ned de senaste datamodellerna för samtliga api:er
+     -- Justera om så behövs utifrån de uppdaterade modellerna
+
+   - För frontend, se till att backend är igång (`yarn dev`), i /frontend kör `yarn generate:contracts` för att synca backend med frontend
+     -- Justera om så behövs utifrån de uppdaterade modellerna
+
+### Backend-routes och autentisering
+
+Alla routes i backenden kräver autentisering som standard — en inloggad session måste finnas, annars svarar servern 401. Det är inte möjligt att råka glömma bort skyddet på en ny endpoint.
+
+**Lägga till en ny skyddad route** — dekorera handler med `@UseBefore(authMiddleware)`:
+
+```ts
+import authMiddleware from '@middlewares/auth.middleware';
+import { UseBefore } from 'routing-controllers';
+
+@Get('/me')
+@UseBefore(authMiddleware)
+getUser() { ... }
+```
+
+Själva 401-svaret kommer inte från dekoratorn. Det kommer från en middleware som mountas framför hela `BASE_URL_PREFIX` innan controllers registreras (`createDefaultAuthGuard` i `backend/src/middlewares/default-auth.middleware.ts`) — den nekar allt som inte är märkt `@Public()`, så en ny route är skyddad så fort den finns. Dekoratorn behövs ändå: den deklarerar avsikten i koden. En route utan vare sig `@UseBefore(authMiddleware)` eller `@Public()` failar `default-auth.metadata.test.ts`, så skyddet kan varken glömmas bort eller tas bort tyst.
+
+**Lägga till en publik route** — dekorera handler med `@Public('motivering')`:
+
+```ts
+import { Public } from '@/middlewares/public.decorator';
+
+@Get('/health/up')
+@Public('Liveness probe - pollas av infrastrukturen utan session')
+async up() { ... }
+```
+
+Motiveringstexten loggas vid uppstart och fångas i ett snapshot-test, så varje förändring framgår i kodgranskning.
+
+**Lägga till en ny controller** — lägg till klassen i `src/controllers.ts`. Controllern täcks då automatiskt av autentiseringsskyddet och av auth-testerna.
+
+**Tester** — tre testsviter bevakar skyddet:
+
+| Fil | Vad den testar |
+| --- | --- |
+| `src/tests/default-auth.metadata.test.ts` | Källkodsnivå: varje route har antingen `@UseBefore(authMiddleware)` eller `@Public()` |
+| `src/tests/default-auth.runtime.test.ts` | Runtime: varje oskyddad route svarar 401 utan session |
+| `src/tests/default-auth.swagger.test.ts` | Swagger UI är nåbar utan session |
+
+### Kvalitetsgrindar & test
+
+Repot har strikta, type-aware kvalitetsgrindar. Kör hela sviten från roten med `yarn verify`
+(fan-out till `backend` och `frontend`) eller per paket:
+
+| Kommando            | Vad det gör                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| `yarn lint:strict`  | ESLint flat config, `strictTypeChecked`, `any` förbjudet, 0 varningar              |
+| `yarn format:check` | Prettier (LF via `.gitattributes` + `.editorconfig`)                               |
+| `yarn type-check`   | `tsc --noEmit`, `strict` + `noUncheckedIndexedAccess`                              |
+| `yarn knip`         | Blockerar på död kod / oanvända exports / oanvända dependencies                     |
+| `yarn test`         | Vitest (backend: node/SWC, frontend: jsdom + React Testing Library)                |
+| `yarn build`        | Backend build + Next-build för frontend med test-env                               |
+| `yarn test:e2e`     | Playwright (frontend)                                                              |
+| `yarn verify`       | Lint, format, type-check, Knip, unit tests och build för alla paket                 |
+
+Git-hooks (husky): **pre-commit** (console.log- + PII-scan + lint-staged), **commit-msg**
+(Conventional Commits), **pre-push** (`yarn verify` för alla paket).
+Använd inte `--no-verify` för att kringgå dem — åtgärda grundorsaken. Se [AGENTS.md](./AGENTS.md).
+
+### Språkstöd
+
+För språkstöd används [next-i18next](https://github.com/i18next/next-i18next).
+
+Placera dina språkfiler i `frontend/public/locales/<locale>/<namespace>.json`.
+
+För att det ska fungera med **Next.js** och **SSR** måste du skicka med språkdatat till ServerSideProps.
+Det gör du genom att lägga till följande till dina page-komponenter (behövs ej i subkomponenter).
+
+```
+export const getServerSideProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, [<namespaces>])),
+  },
+});
+```
+
+För att lägga till ett ytterligare spåk, skapa en mapp med språkets namn, och lägg sedan till språket i `next-i18next.config.js`.
+
+**Exempel för tyska:**
+Skapa `frontend/public/locales/de/common.json`.
+Ändra next-i18next.config.js:
+
+```
+module.exports = {
+  i18n: {
+    defaultLocale: 'sv',
+    locales: ['sv', 'de'],
+  },
+ ...
+};
+```
+
+Som hjälp i VSCode rekommenderas [i18n Ally](https://marketplace.visualstudio.com/items?itemName=Lokalise.i18n-ally).
