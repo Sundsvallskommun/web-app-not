@@ -44,6 +44,8 @@ const validateEnv = () => {
     SAML_IDP_PUBLIC_CERT: str(),
     SAML_PRIVATE_KEY: str(),
     SAML_PUBLIC_KEY: str(),
+    AUTHORIZED_GROUPS: str(),
+    ADMIN_GROUP: str(),
   });
 
   validateSecretKeyStrength();

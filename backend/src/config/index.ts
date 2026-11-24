@@ -99,3 +99,7 @@ export const SAML_ISSUER = env.SAML_ISSUER ?? '';
 export const SAML_IDP_PUBLIC_CERT = env.SAML_IDP_PUBLIC_CERT ?? '';
 export const SAML_PRIVATE_KEY = env.SAML_PRIVATE_KEY ?? '';
 export const SAML_PUBLIC_KEY = env.SAML_PUBLIC_KEY ?? '';
+/** Comma-separated AD groups allowed to log in at all. */
+export const AUTHORIZED_GROUPS = env.AUTHORIZED_GROUPS ?? '';
+/** AD group granted canEditSupportManagement. */
+export const ADMIN_GROUP = env.ADMIN_GROUP ?? '';

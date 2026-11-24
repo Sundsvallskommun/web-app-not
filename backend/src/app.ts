@@ -47,10 +47,10 @@ import { getMetadataArgsStorage, useExpressServer } from 'routing-controllers';
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import swaggerUi from 'swagger-ui-express';
 
-import { HttpException } from './exceptions/HttpException';
 import { Profile } from './interfaces/profile.interface';
 import { User } from './interfaces/users.interface';
 import { livenessHandler } from './routes/liveness.route';
+import { authorizeGroups, getPermissions } from './services/authorization.service';
 import { additionalConverters } from './utils/custom-validation-classes';
 import { isValidOrigin } from './utils/isValidOrigin';
 import { isValidUrl } from './utils/util';
@@ -67,7 +67,7 @@ passport.deserializeUser(function (user, done) {
 const samlStrategy = new Strategy(
   {
     disableRequestedAuthnContext: true,
-    identifierFormat: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
+    identifierFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
     callbackUrl: SAML_CALLBACK_URL,
     entryPoint: SAML_ENTRY_SSO,
     // decryptionPvk: SAML_PRIVATE_KEY,
@@ -76,10 +76,12 @@ const samlStrategy = new Strategy(
     idpCert: SAML_IDP_PUBLIC_CERT,
     issuer: SAML_ISSUER,
     wantAssertionsSigned: true,
-    wantAuthnResponseSigned: false,
-    acceptedClockSkewMs: 5000,
-    audience: SAML_AUDIENCE || SAML_ISSUER,
+    signatureAlgorithm: 'sha256',
+    digestAlgorithm: 'sha256',
     logoutCallbackUrl: SAML_LOGOUT_CALLBACK_URL,
+    acceptedClockSkewMs: 5000,
+    wantAuthnResponseSigned: false,
+    audience: SAML_AUDIENCE || SAML_ISSUER,
   },
   function (samlProfile: SamlProfile | null, done: VerifiedCallback) {
     if (!samlProfile) {
@@ -89,9 +91,19 @@ const samlStrategy = new Strategy(
       });
       return;
     }
-    const { givenName, surname, citizenIdentifier, username } = samlProfile as unknown as Profile;
+    const profile: Profile = samlProfile;
+    // Depending on using Onegate or ADFS for federation the profile data looks a bit different
+    // Here we use the null coalescing operator (??) to handle both cases.
+    const givenName = profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] ?? profile.givenName;
+    const sn = profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] ?? profile.sn;
+    const email = profile['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ?? profile.email;
+    const groups = profile['http://schemas.xmlsoap.org/claims/Group']?.join(',') ?? profile.groups;
+    const username = profile['urn:oid:0.9.2342.19200300.100.1.1'];
 
-    if (!givenName || !surname || !citizenIdentifier) {
+    if (!givenName || !sn || !email || !groups || !username) {
+      logger.error(
+        'Could not extract necessary profile data fields from the IDP profile. Does the Profile interface match the IDP profile response? The profile response may differ, for example Onegate vs ADFS.',
+      );
       done({
         name: 'SAML_MISSING_ATTRIBUTES',
         message: 'Missing profile attributes',
@@ -99,43 +111,35 @@ const samlStrategy = new Strategy(
       return;
     }
 
-    //   const groupList: ADRole[] =
-    //   groups !== undefined
-    //     ? (groups
-    //         .split(',')
-    //         .map(x => x.toLowerCase())
-    //         .filter(x => x.includes('sg_appl_app_')) as ADRole[])
-    //     : [];
-
-    // const appGroups: ADRole[] = groupList.length > 0 ? groupList : groupList.concat('sg_appl_app_read');
-
-    try {
-      // const personNumber = profile.citizenIdentifier;
-      // const citizenResult = await apiService.get<CitizenGuidResponse>({ url: `citizen/2.0/${personNumber}/guid` });
-      // const { data: personId } = citizenResult;
-
-      // if (!personId) {
-      //   return done({
-      //     name: 'SAML_CITIZEN_FAILED',
-      //     message: 'Failed to fetch user from Citizen API',
-      //   });
-      // }
-
-      const findUser: User = {
-        // personId: personId,
-        username: username,
-        name: `${givenName} ${surname}`,
-        givenName: givenName,
-        surname: surname,
-      };
-
-      done(null, findUser);
-    } catch (err) {
-      if (err instanceof HttpException && err.status === 404) {
-        // Handle missing person form Citizen
-      }
-      done(err as Error);
+    if (!authorizeGroups(groups)) {
+      logger.error('Group authorization failed. Is the user a member of the authorized groups?');
+      done({
+        name: 'SAML_MISSING_GROUP',
+        message: 'SAML_MISSING_GROUP',
+      });
+      return;
     }
+
+    const appGroups = groups.split(',').map(group => group.toLowerCase());
+
+    const findUser: User = {
+      name: `${givenName} ${sn}`,
+      firstName: givenName,
+      lastName: sn,
+      username,
+      email,
+      groups: appGroups,
+      // SAML session identity — needed so SP-initiated Single Logout can build a valid LogoutRequest.
+      nameID: profile.nameID,
+      nameIDFormat: profile.nameIDFormat,
+      sessionIndex: profile.sessionIndex,
+      // Permissions are resolved once here, at login, and carried in the session cookie.
+      permissions: getPermissions(appGroups),
+    };
+
+    logger.info(`Authenticated user ${findUser.username}`);
+
+    done(null, findUser);
   },
   function (_samlProfile: SamlProfile | null, done: VerifiedCallback) {
     done(null, {});

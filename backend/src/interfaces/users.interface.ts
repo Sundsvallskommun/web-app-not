@@ -1,10 +1,14 @@
+import { Permissions } from '@interfaces/auth.interface';
+
 export interface User {
   [key: string]: unknown;
-  // personId: string;
-  username: string;
   name: string;
-  givenName: string;
-  surname: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  groups: string[];
+  permissions: Permissions;
 }
 
 export interface ClientUser {

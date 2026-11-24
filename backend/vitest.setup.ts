@@ -1,5 +1,12 @@
 import 'reflect-metadata';
 
+import { MOCK_ADMIN_GROUP, MOCK_AUTHORIZED_GROUPS } from './src/tests/helpers/mock-data';
+
+// The AD groups are always the mock ones in tests, so a group set in the shell or a local
+// env file cannot make the authorization tests depend on real group names.
+process.env.ADMIN_GROUP = MOCK_ADMIN_GROUP;
+process.env.AUTHORIZED_GROUPS = MOCK_AUTHORIZED_GROUPS;
+
 // app.ts builds the SAML strategy and reads config at IMPORT time, so the default-deny
 // runtime tests cannot import the app without these. The values are dummies - no SAML
 // flow is exercised, only the auth guard in front of the routes.
