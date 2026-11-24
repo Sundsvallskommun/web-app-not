@@ -9,8 +9,11 @@ import { emptyUser } from './defaults';
 
 const handleSetUserResponse: (res: ApiResponse<User>) => User = (res) => ({
   name: res.data.name,
+  firstName: res.data.firstName,
+  lastName: res.data.lastName,
   username: res.data.username,
-  // permissions: res.data.permissions,
+  email: res.data.email,
+  permissions: res.data.permissions,
 });
 
 const getMe: () => Promise<ServiceResponse<User>> = () => {

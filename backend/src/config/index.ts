@@ -93,6 +93,8 @@ export const SAML_FAILURE_REDIRECT_MESSAGE = env.SAML_FAILURE_REDIRECT_MESSAGE ?
 /** @public Optional SAML config, exposed for apps that wire up these flows. */
 export const SAML_LOGOUT_REDIRECT = env.SAML_LOGOUT_REDIRECT ?? '';
 export const SAML_ENTRY_SSO = env.SAML_ENTRY_SSO ?? '';
+/** IdP Single Logout endpoint. Optional: when unset, /saml/logout does a local-only logout. */
+export const SAML_LOGOUT_URL = env.SAML_LOGOUT_URL ?? '';
 /** @public Optional SAML config, exposed for apps that wire up these flows. */
 export const SAML_AUDIENCE = env.SAML_AUDIENCE ?? '';
 export const SAML_ISSUER = env.SAML_ISSUER ?? '';

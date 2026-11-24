@@ -13,5 +13,9 @@ export interface User {
 
 export interface ClientUser {
   name: string;
+  firstName: string;
+  lastName: string;
   username: string;
+  email: string;
+  permissions: Permissions;
 }

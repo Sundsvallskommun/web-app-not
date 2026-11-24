@@ -16,6 +16,7 @@ import {
   SAML_IDP_PUBLIC_CERT,
   SAML_ISSUER,
   SAML_LOGOUT_CALLBACK_URL,
+  SAML_LOGOUT_URL,
   SAML_PRIVATE_KEY,
   SAML_PUBLIC_KEY,
   SAML_SUCCESS_REDIRECT,
@@ -78,6 +79,8 @@ const samlStrategy = new Strategy(
     wantAssertionsSigned: true,
     signatureAlgorithm: 'sha256',
     digestAlgorithm: 'sha256',
+    // IdP Single Logout endpoint. Optional: when unset, /saml/logout does a local-only logout.
+    logoutUrl: SAML_LOGOUT_URL || undefined,
     logoutCallbackUrl: SAML_LOGOUT_CALLBACK_URL,
     acceptedClockSkewMs: 5000,
     wantAuthnResponseSigned: false,
@@ -307,14 +310,29 @@ class App {
           successRedirect = req.query.successRedirect;
         }
 
-        samlStrategy.logout(req as unknown as Parameters<typeof samlStrategy.logout>[0], () => {
+        const logoutLocally = (redirectTo: string) => {
           req.logout(err => {
             if (err) {
               next(err);
               return;
             }
-            res.redirect(successRedirect);
+            res.redirect(redirectTo);
           });
+        };
+
+        // No IdP logout endpoint configured → local-only logout (e.g. prod opting out of SLO).
+        if (!SAML_LOGOUT_URL) {
+          logoutLocally(successRedirect);
+          return;
+        }
+
+        samlStrategy.logout(req as unknown as Parameters<typeof samlStrategy.logout>[0], (err: Error | null, url?: string | null) => {
+          if (err || !url) {
+            logger.error('SAML logout URL generation failed; falling back to local logout', err);
+            logoutLocally(successRedirect);
+            return;
+          }
+          logoutLocally(url);
         });
       },
     );
