@@ -7,6 +7,7 @@ envalid.cleanEnv(process.env, {
 });
 
 module.exports = {
+  allowedDevOrigins: ['dev.test'],
   output: 'standalone',
   images: {
     // The image optimizer (/_next/image) has unpatched RCE/SSRF advisories in Next 16.2.x

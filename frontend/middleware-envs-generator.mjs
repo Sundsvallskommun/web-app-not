@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 import { writeFileSync } from 'fs';
-config({ path: './.env' });
+// Same precedence as Next: .env.local overrides .env (first file wins).
+config({ path: ['./.env.local', './.env'], quiet: true });
 
 const outputContent = `export const envs = {
   protectedRoutes: '${process.env.NEXT_PUBLIC_PROTECTED_ROUTES || ''}',
