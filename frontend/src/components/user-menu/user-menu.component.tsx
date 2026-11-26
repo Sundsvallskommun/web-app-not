@@ -17,7 +17,12 @@ export default function UserMenu() {
   return (
     <div className="relative">
       <PopupMenu align="end">
-        <PopupMenu.Button variant="tertiary" showBackground={false} rightIcon={<ChevronDown />}>
+        <PopupMenu.Button
+          className="text-dark-primary"
+          variant="tertiary"
+          showBackground={false}
+          rightIcon={<ChevronDown />}
+        >
           {fullName}
         </PopupMenu.Button>
         <PopupMenu.Panel>
