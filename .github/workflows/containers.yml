@@ -39,6 +39,8 @@ jobs:
       SAML_PUBLIC_KEY: test-public-key
       SAML_SUCCESS_REDIRECT: http://localhost:3000
       SECRET_KEY: test-session-secret
+      SUPPORTMANAGEMENT_NAMESPACE: test-namespace
+      MUNICIPALITY_ID: test-municipality
     steps:
       - name: Checkout
         uses: actions/checkout@v6

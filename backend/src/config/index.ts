@@ -105,3 +105,7 @@ export const SAML_PUBLIC_KEY = env.SAML_PUBLIC_KEY ?? '';
 export const AUTHORIZED_GROUPS = env.AUTHORIZED_GROUPS ?? '';
 /** AD group granted canEditSupportManagement. */
 export const ADMIN_GROUP = env.ADMIN_GROUP ?? '';
+/** Municipality every upstream API call is made for, e.g. 2281 (Sundsvall). */
+export const MUNICIPALITY_ID = env.MUNICIPALITY_ID ?? '';
+/** SupportManagement namespace NOT reads and creates errands in. */
+export const SUPPORTMANAGEMENT_NAMESPACE = env.SUPPORTMANAGEMENT_NAMESPACE ?? '';
