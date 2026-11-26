@@ -32,7 +32,7 @@ export async function proxy(req: NextRequest) {
   }
 
   req.headers.set('x-path', pathname);
-  return i18nRouter(req, i18nConfig);
+  return i18nRouter(req, { ...i18nConfig, basePath: envs.basePath });
 }
 
 export const config = {

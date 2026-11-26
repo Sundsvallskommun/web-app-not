@@ -24,6 +24,7 @@ import {
   SESSION_MAX_AGE_MS,
   SWAGGER_ENABLED,
 } from '@config';
+import { createCorsMiddleware } from '@middlewares/cors.middleware';
 import { createDefaultAuthGuard } from '@middlewares/default-auth.middleware';
 import errorMiddleware from '@middlewares/error.middleware';
 import { buildPublicPathSet, PublicRouteInfo } from '@middlewares/public.decorator';
@@ -34,7 +35,6 @@ import { defaultMetadataStorage } from 'class-transformer/cjs/storage';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import express, { RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
@@ -55,8 +55,6 @@ import { authorizeGroups, getPermissions } from './services/authorization.servic
 import { additionalConverters } from './utils/custom-validation-classes';
 import { isValidOrigin } from './utils/isValidOrigin';
 import { isValidUrl } from './utils/util';
-
-const corsWhitelist = new Set(ORIGIN.split(','));
 
 passport.serializeUser(function (user, done) {
   done(null, user);
@@ -238,19 +236,11 @@ class App {
     passport.use('saml', samlStrategy);
 
     this.app.use(
-      cors({
+      createCorsMiddleware({
+        allowedOrigins: ORIGIN,
         credentials: CREDENTIALS,
-        origin: function (origin, callback) {
-          if (origin === undefined || corsWhitelist.has(origin) || corsWhitelist.has('*')) {
-            callback(null, true);
-          } else {
-            if (NODE_ENV == 'development') {
-              callback(null, true);
-            } else {
-              callback(new Error('Not allowed by CORS'));
-            }
-          }
-        },
+        allowAnyOrigin: NODE_ENV === 'development',
+        exemptPaths: [`${BASE_URL_PREFIX}/saml/login/callback`, `${BASE_URL_PREFIX}/saml/logout/callback`],
       }),
     );
 
