@@ -44,7 +44,7 @@ replace_placeholder() {
 }
 
 # Server-only values the build embedded.
-for name in DOMAIN_NAME ADMIN_URL BASE_URL_PREFIX BASE_PATH; do
+for name in DOMAIN_NAME ADMIN_URL BASE_PATH; do
   replace_placeholder "$name"
 done
 
