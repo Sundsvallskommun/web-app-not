@@ -43,13 +43,13 @@ replace_placeholder() {
   sed -i "s|${name}_PLACEHOLDER|${escaped}|g" "$SERVER_TMP"
 }
 
-# Server-only values the build embedded.
-for name in DOMAIN_NAME ADMIN_URL BASE_PATH; do
+# Every NEXT_PUBLIC_* value Next inlined into the client bundle.
+for name in $(env | sed -n 's/^\(NEXT_PUBLIC_[A-Za-z0-9_]*\)=.*/\1/p'); do
   replace_placeholder "$name"
 done
 
-# Every NEXT_PUBLIC_* value Next inlined into the client bundle.
-for name in $(env | sed -n 's/^\(NEXT_PUBLIC_[A-Za-z0-9_]*\)=.*/\1/p'); do
+# Server-only values the build embedded.
+for name in DOMAIN_NAME ADMIN_URL BASE_PATH; do
   replace_placeholder "$name"
 done
 
