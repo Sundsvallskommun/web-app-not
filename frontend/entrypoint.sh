@@ -23,6 +23,17 @@ replace_placeholder() {
     return
   fi
 
+  # The placeholder sits inside JS string literals, so a quote in the value breaks the bundle
+  # (e.g. ChunkLoadError: Unexpected string). Usually it is dotenv-style quoting passed through
+  # `--env-file`, which keeps quotes literally: write FOO=bar, not FOO='bar' or FOO="".
+  case "$value" in
+    *[\'\"\`]*)
+      echo "Error: ${name} contains a quote character ('\"\`): ${value}" >&2
+      echo "Remove the quotes from its value (--env-file does not strip them)." >&2
+      exit 1
+      ;;
+  esac
+
   # Escape the characters sed treats as special in a replacement string.
   escaped=$(printf '%s' "$value" | sed -e 's/[\\&|]/\\&/g')
 
@@ -33,7 +44,7 @@ replace_placeholder() {
 }
 
 # Server-only values the build embedded.
-for name in DOMAIN_NAME ADMIN_URL; do
+for name in DOMAIN_NAME ADMIN_URL BASE_URL_PREFIX BASE_PATH; do
   replace_placeholder "$name"
 done
 
