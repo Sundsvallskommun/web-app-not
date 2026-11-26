@@ -1,0 +1,17 @@
+{
+  "loading": "Hämtar ärendet",
+  "raw_errand": "Hela ärendet (JSON)",
+  "field": {
+    "errandNumber": "Ärendenummer",
+    "title": "Rubrik",
+    "status": "Status",
+    "priority": "Prioritet",
+    "assignedUserId": "Handläggare",
+    "created": "Skapat"
+  },
+  "error": {
+    "not_found": "Hittade inget ärende {{identifier}}",
+    "invalid_identifier": "{{identifier}} är varken ett ärende-id eller ett ärendenummer",
+    "unknown": "Kunde inte hämta ärendet"
+  }
+}
