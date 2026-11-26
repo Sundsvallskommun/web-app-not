@@ -1,6 +1,9 @@
 {
   "header": {
-    "goto_content": "Hoppa till innehåll"
+    "goto_content": "Hoppa till innehåll",
+    "title": "Draken",
+    "subtitle": "Näringsliv och tillväxt",
+    "menu": "Meny"
   },
   "cookies": {
     "title": "Kakor på {{app}}",
