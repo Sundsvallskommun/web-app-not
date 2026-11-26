@@ -3,7 +3,7 @@ import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate, ValidationError } from 'class-validator';
 import { RequestHandler } from 'express';
 
-const getAllNestedErrors = (error: ValidationError): string => {
+export const getAllNestedErrors = (error: ValidationError): string => {
   if (error.constraints) {
     return Object.values(error.constraints).join(', ');
   }

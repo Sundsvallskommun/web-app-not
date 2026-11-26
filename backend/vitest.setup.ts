@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { MOCK_ADMIN_GROUP, MOCK_AUTHORIZED_GROUPS } from './src/tests/helpers/mock-data';
+import { MOCK_ADMIN_GROUP, MOCK_AUTHORIZED_GROUPS, mockMunicipalityId, mockSupportNamespace } from './src/tests/helpers/mock-data';
 
 // The AD groups are always the mock ones in tests, so a group set in the shell or a local
 // env file cannot make the authorization tests depend on real group names.
@@ -24,3 +24,7 @@ process.env.SAML_IDP_PUBLIC_CERT ??= 'test-idp-cert';
 process.env.SAML_PRIVATE_KEY ??= 'test-private-key';
 process.env.SAML_PUBLIC_KEY ??= 'test-public-key';
 process.env.ORIGIN ??= 'http://localhost:3000';
+// SupportManagement URLs are built from these; fixed so tests can assert exact upstream URLs.
+process.env.API_BASE_URL = 'https://api.test.local';
+process.env.MUNICIPALITY_ID = mockMunicipalityId;
+process.env.SUPPORTMANAGEMENT_NAMESPACE = mockSupportNamespace;

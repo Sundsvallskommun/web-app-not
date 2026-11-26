@@ -5,7 +5,8 @@
     "src/types/**/*.d.ts",
     "src/tests/**/*.{test,spec}.ts",
     "src/middlewares/validation.middleware.ts",
-    "src/services/authorization.service.ts"
+    "src/services/authorization.service.ts",
+    "src/tests/helpers/mock-data.ts"
   ],
   "project": ["src/**/*.ts"],
   "ignore": ["src/data-contracts/**"],

@@ -4,17 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { RequestWithUser } from '@/interfaces/auth.interface';
 import { User } from '@/interfaces/users.interface';
 
-const sessionUser: User = {
-  name: 'Anna Andersson',
-  firstName: 'Anna',
-  lastName: 'Andersson',
-  username: 'ann01and',
-  email: 'anna.andersson@example.test',
-  groups: ['not_admins'],
-  permissions: { canEditSupportManagement: true },
-  nameID: 'name-id',
-  sessionIndex: 'session-1',
-};
+import { mockUser } from './helpers/mock-data';
+
+const sessionUser: User = { ...mockUser, nameID: 'name-id', sessionIndex: 'session-1' };
 
 const requestWith = (user: User) => ({ user }) as RequestWithUser;
 
@@ -24,11 +16,11 @@ describe('UserController', () => {
 
     expect(controller.getUser(requestWith(sessionUser))).toEqual({
       data: {
-        name: 'Anna Andersson',
-        firstName: 'Anna',
-        lastName: 'Andersson',
-        username: 'ann01and',
-        email: 'anna.andersson@example.test',
+        name: mockUser.name,
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName,
+        username: mockUser.username,
+        email: mockUser.email,
         permissions: { canEditSupportManagement: true },
       },
       message: 'success',

@@ -28,6 +28,9 @@ services:
       SECRET_KEY: ${SECRET_KEY:?err}
       # Used for CORS - should contain the domain of frontend
       ORIGIN: ${ORIGIN:?err}
+      # SupportManagement: municipality and namespace errands are read from and created in
+      MUNICIPALITY_ID: ${MUNICIPALITY_ID:?err}
+      SUPPORTMANAGEMENT_NAMESPACE: ${SUPPORTMANAGEMENT_NAMESPACE:?err}
       # Optionals
       NODE_ENV: ${NODE_ENV-production}
       # Set to LOCAL only when serving over plain http; it turns off the Secure session cookie.

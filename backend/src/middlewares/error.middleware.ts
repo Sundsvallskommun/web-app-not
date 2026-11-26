@@ -1,4 +1,5 @@
 import { HttpException } from '@exceptions/HttpException';
+import { getAllNestedErrors } from '@middlewares/validation.middleware';
 import { logger } from '@utils/logger';
 import { NextFunction, Request, Response } from 'express';
 
@@ -9,8 +10,9 @@ function sanitizeLogInput(input: string): string {
 
 const errorMiddleware = (error: HttpException, req: Request, res: Response, next: NextFunction) => {
   try {
-    const status: number = error.status || 500;
-    const message: string = error.message || 'Something went wrong';
+    const status: number = error.status || error.httpCode || 500;
+    const validationMessage = error.errors?.length > 0 ? error.errors.map(getAllNestedErrors).join(', ') : '';
+    const message: string = validationMessage || error.message || 'Something went wrong';
     const errors: string =
       error.errors?.length > 0 ? JSON.stringify(error.errors.map(error => ({ property: error.property, constraints: error.constraints }))) : '';
 

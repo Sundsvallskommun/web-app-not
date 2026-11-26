@@ -47,6 +47,8 @@ const validateEnv = () => {
     SAML_PUBLIC_KEY: str(),
     AUTHORIZED_GROUPS: str(),
     ADMIN_GROUP: str(),
+    MUNICIPALITY_ID: str(),
+    SUPPORTMANAGEMENT_NAMESPACE: str(),
   });
 
   validateSecretKeyStrength();

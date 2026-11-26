@@ -4,6 +4,10 @@ export const APIS = [
     name: 'simulatorserver',
     version: '2.0',
   },
+  {
+    name: 'supportmanagement',
+    version: '18.5',
+  },
 ] as const;
 
 type ApiName = (typeof APIS)[number]['name'];
